@@ -58,7 +58,7 @@ func JwtMiddleware(jwtKey []byte) gin.HandlerFunc {
 
 		if err != nil {
 			log.Println("error parsing token")
-			ctx.AbortWithStatusJSON(http.StatusInternalServerError, ErrorVo{Message: "unexpected error"})
+			ctx.AbortWithStatusJSON(http.StatusUnauthorized, ErrorVo{Message: "unexpected error"})
 			return
 		}
 
