@@ -79,3 +79,38 @@ func JwtMiddleware(jwtKey []byte) gin.HandlerFunc {
 		ctx.Next()
 	}
 }
+
+func GenerateTokenPair(userId string, userName string, created time.Time, updated time.Time, jwtKey []byte) (string, string, error) {
+	refreshTokenClaims := &RefreshTokenClaim{
+		Id: userId,
+		StandardClaims: jwt.StandardClaims{
+			ExpiresAt: time.Now().Add(7 * 24 * time.Hour).Unix(),
+		},
+	}
+
+	refreshToken := jwt.NewWithClaims(jwt.SigningMethodHS256, refreshTokenClaims)
+	refreshTokenString, err := refreshToken.SignedString(jwtKey)
+	if err != nil {
+		log.Printf("error signing refresh token '%s'", err.Error())
+		return "", "", err
+	}
+
+	accessTokenClaims := &AccessTokenClaim{
+		Id:      userId,
+		Name:    userName,
+		Created: created,
+		Updated: updated,
+		StandardClaims: jwt.StandardClaims{
+			ExpiresAt: time.Now().Add(15 * time.Minute).Unix(),
+		},
+	}
+
+	accessToken := jwt.NewWithClaims(jwt.SigningMethodHS256, accessTokenClaims)
+	accessTokenString, err := accessToken.SignedString(jwtKey)
+	if err != nil {
+		log.Printf("error signing access token '%s'", err.Error())
+		return "", "", err
+	}
+
+	return refreshTokenString, accessTokenString, nil
+}
